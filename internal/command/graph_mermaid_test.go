@@ -26,23 +26,21 @@ func TestGraph_planPhase_mermaid(t *testing.T) {
 	td := tempWorkingDirFixture(t, "graph")
 	t.Chdir(td.RootModuleDir())
 
-	ui := new(cli.MockUi)
-	streams, closeStreams := terminal.StreamsForTesting(t)
+	view, done := testView(t)
 	c := &GraphCommand{
 		Meta: Meta{
 			testingOverrides: metaOverridesForProvider(applyFixtureProvider()),
-			Ui:               ui,
-			Streams:          streams,
+			View:             view,
 			WorkingDir:       td,
 		},
 	}
 
 	args := []string{"-type=plan", "-format=mermaid"}
 	if code := c.Run(args); code != 0 {
-		t.Fatalf("bad: \n%s", ui.ErrorWriter.String())
+		t.Fatalf("bad: \n%s", done(t).All())
 	}
 
-	output := closeStreams(t)
+	output := done(t)
 	if !strings.Contains(output.Stdout(), "flowchart") && !strings.Contains(output.Stdout(), "-->") {
 		t.Fatalf("doesn't look like mermaid graph:\n%s\n\nstderr:\n%s", output.Stdout(), output.Stderr())
 	}
